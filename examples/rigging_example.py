@@ -95,14 +95,14 @@ async def run(model: str):
     )
 
     command_response = command_chat.last.content
-    print("Command Output:", command_response)
+    print("\nCommand Output:", command_response)
 
     # Second LLM - Security Evaluator
     system_prompt = """You are a penetration testing expert.
-    Analyze the output of security commands and provide next steps towards explotation.
+    Analyze the output of security commands and provide next steps towards explotation. Start your response with "Evaluation:"
     1. What the results mean
-    2. How to exploit
-    3. Parse the available robopages at https://github.com/dreadnode/robopages/tree/main/cybersecurity and provide an example usage.
+    2. How to exploit them further
+    3. Use the available tools to achieve exploitation
     4. If a robopage is not available, provide the relevant terminal/docker command.
     Be concise but thorough."""
 
@@ -117,6 +117,7 @@ Please provide your analysis:"""
     pentest_evaluator = (
         await rg.get_generator(model)
         .chat(analysis_prompt)
+        .using(*tools, force=True)
         .run()
     )
 
