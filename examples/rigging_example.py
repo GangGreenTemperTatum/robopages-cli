@@ -99,12 +99,7 @@ async def run(model: str):
 
     # Second LLM - Security Evaluator
     system_prompt = """You are a penetration testing expert.
-    Analyze the output of security commands and provide next steps towards explotation. Start your response with "Evaluation:"
-    1. What the results mean
-    2. How to exploit them further
-    3. Use the available tools to achieve exploitation
-    4. If a robopage is not available, provide the relevant terminal/docker command.
-    Be concise but thorough."""
+    Analyze the output of security results and use the available tools to achieve exploitation. If a robopage is not available, provide the relevant terminal/docker command."""
 
     # Include system message as part of the chat prompt
     analysis_prompt = f"""System: {system_prompt}
