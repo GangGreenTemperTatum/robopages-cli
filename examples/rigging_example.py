@@ -97,6 +97,8 @@ async def run(model: str):
     command_response = command_chat.last.content
     print("\nCommand Output:", command_response)
 
+    print("\nRunning Security Evaluation generator...")
+
     # Second LLM - Security Evaluator
     system_prompt = """You are a penetration testing expert.
     Analyze the output of security results and use the available tools to achieve exploitation. If a robopage is not available, provide the relevant terminal/docker command."""
