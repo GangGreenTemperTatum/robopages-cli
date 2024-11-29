@@ -1,10 +1,24 @@
 import asyncio
 import requests
 import rigging as rg
+from rigging import logging, logger
 from rich import print
 
+logger.enable("rigging")
+
+try:
+    target = input("Enter the target IP address or domain: ").strip()
+    if not target:  # Check for empty string
+        target = "127.0.0.1"
+        logger.info(f"Defaulting to target: {target}")
+except Exception as e:
+    logger.error(f"Error reading input: {e}")
+    target = "127.0.0.1"
+    logger.info(f"Falling back to default target: {target}")
 
 # we need to wrap the tools in a class that Rigging can understand
+
+
 class Wrapper(rg.Tool):
     # we'll set these in the constructor
     name = "_"
@@ -72,14 +86,40 @@ async def run(model: str):
         for tool in requests.get("http://localhost:8000/?flavor=rigging").json()
     ]
 
-    chat = (
+    # First LLM - Command Generator
+    command_chat = (
         await rg.get_generator(model)
-        .chat("Find open ports on 127.0.0.1")
+        .chat(f"Find open ports on \"{target}\" and include all results.")
         .using(*tools, force=True)
         .run()
     )
 
-    print(chat.last.content)
+    command_response = command_chat.last.content
+    print("\nCommand Output:", command_response)
 
+    print("\nRunning Security Evaluation generator...")
 
-asyncio.run(run("gpt-4o"))
+    # Second LLM - Security Evaluator
+    system_prompt = """You are a penetration testing expert.
+    Analyze the output of security results and use the available tools to achieve exploitation. If a robopage is not available, provide the relevant terminal/docker command."""
+
+    # Include system message as part of the chat prompt
+    analysis_prompt = f"""System: {system_prompt}
+
+Command Output to Analyze:
+{command_response}
+
+Please provide your analysis:"""
+
+    pentest_evaluator = (
+        await rg.get_generator(model)
+        .chat(analysis_prompt)
+        .using(*tools, force=True)
+        .run()
+    )
+
+    print("\nSecurity Evaluation:")
+    print(pentest_evaluator.last.content)
+
+if __name__ == "__main__":
+    asyncio.run(run("gpt-4"))
